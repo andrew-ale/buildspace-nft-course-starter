@@ -7,7 +7,8 @@ import myEpicNft from "./utils/MyEpicNFT.json";
 // Constants
 const TWITTER_HANDLE = "_buildspace";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = "";
+const OPENSEA_LINK =
+  "https://testnets.opensea.io/collection/squarenft-523kncafwu";
 const TOTAL_MINT_COUNT = 50;
 
 const App = () => {
@@ -24,6 +25,14 @@ const App = () => {
     }
 
     const accounts = await ethereum.request({ method: "eth_accounts" });
+
+    let chainId = await ethereum.request({ method: "eth_chainId" });
+    console.log("Connected to chain " + chainId);
+
+    const rinkebyChainId = "0x4";
+    if (chainId !== rinkebyChainId) {
+      alert("You are not connected to the Rinkeby Test Network");
+    }
 
     if (accounts.length !== 0) {
       const account = accounts[0];
@@ -46,6 +55,15 @@ const App = () => {
       const accounts = await ethereum.request({
         method: "eth_requestAccounts",
       });
+
+      let chainId = await ethereum.request({ method: "eth_chainId" });
+      console.log("Connected to chain " + chainId);
+
+      const rinkebyChainId = "0x4";
+      if (chainId !== rinkebyChainId) {
+        alert("You are not connected to the Rinkeby Test Network");
+      }
+
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
     } catch (error) {
@@ -54,7 +72,7 @@ const App = () => {
   };
 
   const askContractToMintNFT = async () => {
-    const CONTRACT_ADDRESS = "0x6eC2A1D32E27Cf6754A4B654c5B3bDC06D4c38eC";
+    const CONTRACT_ADDRESS = "0x5753137919301Ed4C786402fAdDFb25c8a091e13";
 
     try {
       const { ethereum } = window;
@@ -68,15 +86,14 @@ const App = () => {
           signer
         );
 
-        console.log("Going to pop wallet now to pay gas...");
-        let nftTxn = await connectedContract.makeAnEpicNFT();
+        connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
+          console.log(from, tokenId.toNumber());
+          alert(
+            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+          );
+        });
 
-        console.log("Mining...please wait.");
-        await nftTxn.wait();
-
-        console.log(
-          `Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`
-        );
+        console.log("Setup event listener!");
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -95,6 +112,15 @@ const App = () => {
     </button>
   );
 
+  const renderMintUI = () => (
+    <button
+      onClick={askContractToMintNFT}
+      className="cta-button connect-wallet-button"
+    >
+      Mint NFT
+    </button>
+  );
+
   useEffect(() => {
     checkIfWalletIsConnected();
   }, []);
@@ -107,16 +133,10 @@ const App = () => {
           <p className="sub-text">
             Each unique. Each beautiful. Discover your NFT today.
           </p>
-          {currentAccount === "" ? (
-            renderNotConnectedContainer()
-          ) : (
-            <button
-              onClick={askContractToMintNFT}
-              className="cta-button connect-wallet-button"
-            >
-              Mint NFT
-            </button>
-          )}
+          {currentAccount === ""
+            ? renderNotConnectedContainer()
+            : renderMintUI()}
+          <button onClick={OPENSEA_LINK}>Open The Collections</button>
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />

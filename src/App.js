@@ -136,6 +136,7 @@ const App = () => {
           {currentAccount === ""
             ? renderNotConnectedContainer()
             : renderMintUI()}
+          <br></br>
           <button onClick={OPENSEA_LINK}>Open The Collections</button>
         </div>
         <div className="footer-container">
